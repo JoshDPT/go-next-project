@@ -1,71 +1,60 @@
 package main
- 
+
 import (
-    "fmt"
-    "log"
-    "net/http"
-
-		"github.com/gorilla/websocket"
+	"context"
+	"errors"
+	"log"
+	"net"
+	"net/http"
+	"os"
+	"os/signal"
+	"time"
 )
- 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin:     func(r *http.Request) bool { return true },
-}
 
-func reader(conn *websocket.Conn) {
-	for {
-		// read in a message
-		messageType, p, err := conn.ReadMessage()
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		// print out that message for clarity
-		log.Println(string(p))
- 
-		if err := conn.WriteMessage(messageType, p); err != nil {
-			log.Println(err)
-			return
-		}
- 
-	}
-}
-
-func wsEndpoint(w http.ResponseWriter, r *http.Request) {
-	// upgrade this connection to a WebSocket
-	// connection
-	ws, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println(err)
-	}
- 
-	log.Println("Client Connected")
-	err = ws.WriteMessage(1, &#91;]byte("Hi Client!"))
-	if err != nil {
-		log.Println(err)
-	}
-	// listen indefinitely for new messages coming
-	// through on our WebSocket connection
-	reader(ws)
-}
-
-func homePage(w http.ResponseWriter, r *http.Request) {
-    fmt.Fprintf(w, "Home HTTP")
-}
- 
-func wsEndpoint(w http.ResponseWriter, r *http.Request) {
-    fmt.Fprintf(w, "Hello WebSocket")
-}
- 
-func setupRoutes() {
-    http.HandleFunc("/", homePage)
-    http.HandleFunc("/ws", wsEndpoint)
-}
- 
 func main() {
-    fmt.Println("Hello World")
-    setupRoutes()
-    log.Fatal(http.ListenAndServe(":8080", nil))
+	log.SetFlags(0)
+
+	err := run()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+// run initializes the chatServer and then
+// starts a http.Server for the passed in address.
+func run() error {
+	if len(os.Args) < 2 {
+		return errors.New("please provide an address to listen on as the first argument")
+	}
+
+	l, err := net.Listen("tcp", os.Args[1])
+	if err != nil {
+		return err
+	}
+	log.Printf("listening on http://%v", l.Addr())
+
+	cs := newChatServer()
+	s := &http.Server{
+		Handler:      cs,
+		ReadTimeout:  time.Second * 10,
+		WriteTimeout: time.Second * 10,
+	}
+	errc := make(chan error, 1)
+	go func() {
+		errc <- s.Serve(l)
+	}()
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, os.Interrupt)
+	select {
+	case err := <-errc:
+		log.Printf("failed to serve: %v", err)
+	case sig := <-sigs:
+		log.Printf("terminating: %v", sig)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	return s.Shutdown(ctx)
 }
