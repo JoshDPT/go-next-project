@@ -17,8 +17,8 @@ type Document struct {
 }
 
 var document = Document{
-	Title: "Test document",
-	Body:  "Hello world\nhere is a second line",
+	Title: "Pot of Gold",
+	Body:  "100",
 } //TODO HACK: only one document for now
 var documentMutex sync.Mutex
 var documentCond = sync.NewCond(&documentMutex)

@@ -34,8 +34,10 @@ export default function Home(props: HomeProps): JSX.Element {
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
 			<main>
+				<h1>{data.title}</h1>
+				<h1>Current Cost: {data.body}</h1>
 				<input
-					className='bg-slate-800 text-white w-max'
+					className="bg-slate-800 text-white w-max"
 					onChange={(e) =>
 						ws.send(
 							JSON.stringify({
@@ -58,6 +60,45 @@ export default function Home(props: HomeProps): JSX.Element {
 					}
 					value={data.body || ''}
 				/>
+				<button
+					className='bg-yellow-500 p-2 m-6 rounded-sm'
+					onClick={() =>
+						ws.send(
+							JSON.stringify({
+								title: data.title,
+								body: (Number(data.body) + 5).toString(),
+							})
+						)
+					}
+				>
+					Bid +5
+				</button>
+				<button
+					className='bg-yellow-500 p-2 m-6 rounded-sm'
+					onClick={() =>
+						ws.send(
+							JSON.stringify({
+								title: data.title,
+								body: (Number(data.body) + 25).toString(),
+							})
+						)
+					}
+				>
+					Bid +25
+				</button>
+				<button
+					className='bg-yellow-500 p-2 m-6 rounded-sm'
+					onClick={() =>
+						ws.send(
+							JSON.stringify({
+								title: data.title,
+								body: (Number(data.body) + 100).toString(),
+							})
+						)
+					}
+				>
+					Bid +100
+				</button>
 			</main>
 		</div>
 	);
