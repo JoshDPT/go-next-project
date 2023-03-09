@@ -1,60 +1,47 @@
 package main
 
 import (
-	"context"
-	"errors"
+	"fmt"
+	"github.com/gobwas/ws"
+	"github.com/gobwas/ws/wsutil"
 	"log"
-	"net"
 	"net/http"
-	"os"
-	"os/signal"
 	"time"
 )
 
 func main() {
-	log.SetFlags(0)
+	handler := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		var resp []byte
+		if req.URL.Path == "/handler-initial-data" {
+			resp = []byte(`{"text": "initial"}`)
+		} else if req.URL.Path == "/handler" {
+			conn, _, _, err := ws.UpgradeHTTP(req, rw)
+			if err != nil {
+				log.Println("Error with WebSocket: ", err)
+				rw.WriteHeader(http.StatusMethodNotAllowed)
+				return
+			}
+			go func() {
+				defer conn.Close()
+		
+				time.Sleep(time.Second) //TODO HACK: sleep a second to check everything is working properly
+				err = wsutil.WriteServerMessage(conn, ws.OpText, []byte(`{"text": "from-websocket"}`))
+				if err != nil {
+					log.Println("Error writing WebSocket data: ", err)
+					return
+				}
+			}()
+			return
+		} else {
+			rw.WriteHeader(http.StatusNotFound)
+			return
+		}
 
-	err := run()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
+		rw.Header().Set("Content-Type", "application/json")
+		rw.Header().Set("Content-Length", fmt.Sprint(len(resp)))
+		rw.Write(resp)
+	})
 
-// run initializes the chatServer and then
-// starts a http.Server for the passed in address.
-func run() error {
-	if len(os.Args) < 2 {
-		return errors.New("please provide an address to listen on as the first argument")
-	}
-
-	l, err := net.Listen("tcp", os.Args[1])
-	if err != nil {
-		return err
-	}
-	log.Printf("listening on http://%v", l.Addr())
-
-	cs := newChatServer()
-	s := &http.Server{
-		Handler:      cs,
-		ReadTimeout:  time.Second * 10,
-		WriteTimeout: time.Second * 10,
-	}
-	errc := make(chan error, 1)
-	go func() {
-		errc <- s.Serve(l)
-	}()
-
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, os.Interrupt)
-	select {
-	case err := <-errc:
-		log.Printf("failed to serve: %v", err)
-	case sig := <-sigs:
-		log.Printf("terminating: %v", sig)
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-	defer cancel()
-
-	return s.Shutdown(ctx)
+	log.Println("Server is available at http://localhost:8000")
+	log.Fatal(http.ListenAndServe(":8000", handler))
 }
