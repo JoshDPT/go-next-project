@@ -25,7 +25,9 @@ var documentCond = sync.NewCond(&documentMutex)
 
 func main() {
 	handler := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+		// switch cases based on the url path - endpoint
 		switch req.URL.Path {
+		// case for grabbing the initial data from getServerSideProps Next 12
 		case "/handler-initial-data":
 			var documentBytes bytes.Buffer
 			err := json.NewEncoder(&documentBytes).Encode(&document)
@@ -36,8 +38,10 @@ func main() {
 			rw.Header().Set("Content-Type", "application/json")
 			rw.Header().Set("Content-Length", fmt.Sprint(documentBytes.Len()))
 			rw.Write(documentBytes.Bytes())
-		
+
+			// case for the WEBSOCKETS
 		case "/handler":
+			// if it is a WEBSOCKET, we need to upgrate it from std HTTP to a WEBSOCKET connection
 			conn, _, _, err := ws.UpgradeHTTP(req, rw)
 			if err != nil {
 				log.Println("Error with WebSocket: ", err)
