@@ -35,7 +35,7 @@ const CountdownTimer: React.FC<Props> = ({ deadline }) => {
 	const { hours, minutes, seconds } = remainingTime;
 
 	return (
-		<div className="mx-auto bg-blue-500 rounded-lg my-2 shadow-lg">
+		<div className="mx-auto bg-sky-500 rounded-lg my-2 shadow-lg">
 			<h2 className="normal-num p-1 text-xl font-bold text-white">{`${hours
 				.toString()
 				.padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds

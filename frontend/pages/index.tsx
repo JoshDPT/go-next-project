@@ -19,7 +19,7 @@ export async function getServerSideProps(): Promise<{ props: HomeProps }> {
 export default function Home(props: HomeProps): JSX.Element {
 	const [data, setData] = useState(props.data);
 	const [ws, setWS] = useState<WebSocket | null>(null);
-	const currentCash = Number('7500');
+	const currentCash = Number('1000');
 	const deadline = new Date('2023-03-31T23:59:59');
 
 	useEffect(() => {
@@ -39,20 +39,22 @@ export default function Home(props: HomeProps): JSX.Element {
 
 			<main className="flex flex-col ">
 				<h1 className="mx-auto normal-num p-2 my-2 w-48 font-serif font-extrabold text-green-900">
-					Current Cash: ${currentCash}
+					Current Cash: ${currentCash.toLocaleString()}
 				</h1>
 				<h1 className="mx-auto p-2 my-2 w-48 underline text-3xl font-black">
 					{data.title}
 				</h1>
 				<h1 className="mx-auto normal-num p-2 my-2 font-serif text-xl font-bold text-red-500">
-					Current Cost: ${data.body}
+					Price: ${Number(data.body).toLocaleString()}
 				</h1>
+				{/* timer pauses when click bid button?? */}
 				<CountdownTimer deadline={deadline} />
 
 				<button
-					className="bg-green-600 font-bold p-2 my-2 rounded-full w-48 mx-auto shadow-lg text-white"
+					className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded-lg shadow w-48 mx-auto my-2 disabled:text-gray-400 disabled:hover:bg-white"
+					disabled={currentCash < Number(data.body) + 5}
 					onClick={() => {
-						if (ws && currentCash >= Number(data.body) + 5) {
+						if (ws) {
 							ws.send(
 								JSON.stringify({
 									title: data.title,
@@ -66,9 +68,10 @@ export default function Home(props: HomeProps): JSX.Element {
 				</button>
 
 				<button
-					className="bg-green-600 font-bold p-2 my-2 rounded-full w-48 mx-auto shadow-lg text-white"
+					className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded-lg shadow w-48 mx-auto my-2 disabled:text-gray-400 disabled:hover:bg-white"
+					disabled={currentCash < Number(data.body) + 25}
 					onClick={() => {
-						if (ws && currentCash >= Number(data.body) + 25) {
+						if (ws) {
 							ws.send(
 								JSON.stringify({
 									title: data.title,
@@ -82,7 +85,8 @@ export default function Home(props: HomeProps): JSX.Element {
 				</button>
 
 				<button
-					className="bg-green-600 font-bold p-2 my-2 rounded-full w-48 mx-auto shadow-lg text-white"
+					className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded-lg shadow w-48 mx-auto my-2 disabled:text-gray-400 disabled:hover:bg-white"
+					disabled={currentCash < Number(data.body) + 100}
 					onClick={() => {
 						if (ws && currentCash >= Number(data.body) + 100) {
 							ws.send(
