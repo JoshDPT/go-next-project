@@ -1,3 +1,4 @@
+import CountdownTimer from '@/components/CountdownTimer';
 import Head from 'next/head';
 import { useEffect, useState } from 'react';
 
@@ -18,6 +19,8 @@ export async function getServerSideProps(): Promise<{ props: HomeProps }> {
 export default function Home(props: HomeProps): JSX.Element {
 	const [data, setData] = useState(props.data);
 	const [ws, setWS] = useState<WebSocket | null>(null);
+	const currentCash = Number('7500');
+	const deadline = new Date('2023-03-31T23:59:59');
 
 	useEffect(() => {
 		const newWS = new WebSocket('ws://localhost:8000/handler');
@@ -33,71 +36,65 @@ export default function Home(props: HomeProps): JSX.Element {
 				<meta name="description" content="Like Google Docs, but open source!" />
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
-			<main>
-				<h1>{data.title}</h1>
-				<h1>Current Cost: {data.body}</h1>
-				<input
-					className="bg-slate-800 text-white w-max"
-					onChange={(e) =>
-						ws.send(
-							JSON.stringify({
-								title: e.target.value,
-								body: data.body,
-							})
-						)
-					}
-					value={data.title || 'Untitled Document'}
-				/>
 
-				<textarea
-					onChange={(e) =>
-						ws.send(
-							JSON.stringify({
-								title: data.title,
-								body: e.target.value,
-							})
-						)
-					}
-					value={data.body || ''}
-				/>
+			<main className="flex flex-col ">
+				<h1 className="mx-auto normal-num p-2 my-2 w-48 font-serif font-extrabold text-green-900">
+					Current Cash: ${currentCash}
+				</h1>
+				<h1 className="mx-auto p-2 my-2 w-48 underline text-3xl font-black">
+					{data.title}
+				</h1>
+				<h1 className="mx-auto normal-num p-2 my-2 font-serif text-xl font-bold text-red-500">
+					Current Cost: ${data.body}
+				</h1>
+				<CountdownTimer deadline={deadline} />
+
 				<button
-					className='bg-yellow-500 p-2 m-6 rounded-sm'
-					onClick={() =>
-						ws.send(
-							JSON.stringify({
-								title: data.title,
-								body: (Number(data.body) + 5).toString(),
-							})
-						)
-					}
+					className="bg-green-600 font-bold p-2 my-2 rounded-full w-48 mx-auto shadow-lg text-white"
+					onClick={() => {
+						if (ws && currentCash >= Number(data.body) + 5) {
+							ws.send(
+								JSON.stringify({
+									title: data.title,
+									body: (Number(data.body) + 5).toString(),
+								})
+							);
+						}
+					}}
 				>
-					Bid +5
+					Bid +$5
 				</button>
+
 				<button
-					className='bg-yellow-500 p-2 m-6 rounded-sm'
-					onClick={() =>
-						ws.send(
-							JSON.stringify({
-								title: data.title,
-								body: (Number(data.body) + 25).toString(),
-							})
-						)
-					}
+					className="bg-green-600 font-bold p-2 my-2 rounded-full w-48 mx-auto shadow-lg text-white"
+					onClick={() => {
+						if (ws && currentCash >= Number(data.body) + 25) {
+							ws.send(
+								JSON.stringify({
+									title: data.title,
+									body: (Number(data.body) + 25).toString(),
+								})
+							);
+						}
+					}}
 				>
-					Bid +25
+					Bid +$25
 				</button>
+
 				<button
-					className='bg-yellow-500 p-2 m-6 rounded-sm'
-					onClick={() =>
-						ws.send(
-							JSON.stringify({
-								title: data.title,
-								body: (Number(data.body) + 100).toString(),
-							})
-						)
-					}
+					className="bg-green-600 font-bold p-2 my-2 rounded-full w-48 mx-auto shadow-lg text-white"
+					onClick={() => {
+						if (ws && currentCash >= Number(data.body) + 100) {
+							ws.send(
+								JSON.stringify({
+									title: data.title,
+									body: (Number(data.body) + 100).toString(),
+								})
+							);
+						}
+					}}
 				>
-					Bid +100
+					Bid +$100
 				</button>
 			</main>
 		</div>
