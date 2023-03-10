@@ -21,8 +21,8 @@ export async function getServerSideProps(): Promise<{ props: HomeProps }> {
 
 export default function Home(props: HomeProps): JSX.Element {
 	const [data, setData] = useState(props.data);
-	// const [ws, setWS] = useState<WebSocket | null>(null);
 
+	// custom hook - useWebSocket
 	const ws = useWebSocket('ws://localhost:8000/handler', setData);
 
 	// current cash as number
@@ -33,14 +33,6 @@ export default function Home(props: HomeProps): JSX.Element {
 
 	// bid button options
 	const bids = [5, 25, 100, 500];
-
-	// setting the state as a new Websocket to the handler endpoint on the Go server
-	// useEffect(() => {
-	// 	const newWS = new WebSocket('ws://localhost:8000/handler');
-	// 	newWS.onerror = (err) => console.error(err);
-	// 	newWS.onopen = () => setWS(newWS);
-	// 	newWS.onmessage = (msg) => setData(JSON.parse(msg.data));
-	// }, []);
 
 	return (
 		<div>
@@ -57,6 +49,11 @@ export default function Home(props: HomeProps): JSX.Element {
 				</h1>
 
 				{/* TODO: BUTTON & LIB function for RNG add to cash */}
+				<button className="mx-auto p-2 my-2 w-48 underline text-3xl font-black"
+					onClick={}
+					>
+					Roll
+				</button>
 
 				{/* Title of item */}
 				<h1 className="mx-auto p-2 my-2 w-48 underline text-3xl font-black">
