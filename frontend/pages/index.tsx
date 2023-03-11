@@ -1,5 +1,6 @@
 import BidButton from '@/components/BidButton';
 import CountdownTimer from '@/components/CountdownTimer';
+import getRandomNumber from '@/lib/getRandomNumber';
 import useWebSocket from '@/lib/useWebsocket';
 import Head from 'next/head';
 import { useState } from 'react';
@@ -21,18 +22,17 @@ export async function getServerSideProps(): Promise<{ props: HomeProps }> {
 
 export default function Home(props: HomeProps): JSX.Element {
 	const [data, setData] = useState(props.data);
+	let [cash, setCash] = useState(Number('1000'));
 
+	console.log(cash);
 	// custom hook - useWebSocket
 	const ws = useWebSocket('ws://localhost:8000/handler', setData);
-
-	// current cash as number
-	const currentCash = Number('1000');
 
 	// deadline of auction in some time zone
 	const deadline = new Date('2023-03-31T23:59:59');
 
 	// bid button options
-	const bids = [5, 25, 100, 500];
+	const bids = [5, 25, 100];
 
 	return (
 		<div>
@@ -44,14 +44,15 @@ export default function Home(props: HomeProps): JSX.Element {
 
 			<main className="flex flex-col ">
 				{/* current liquid cash */}
-				<h1 className="mx-auto normal-num p-2 my-2 w-48 font-serif font-extrabold text-green-900">
-					Current Cash: ${currentCash.toLocaleString()}
+				<h1 className="mx-auto normal-num p-2 my-2 font-serif font-extrabold text-green-900">
+					Current Cash: ${cash.toLocaleString()}
 				</h1>
 
 				{/* TODO: BUTTON & LIB function for RNG add to cash */}
-				<button className="mx-auto p-2 my-2 w-48 underline text-3xl font-black"
-					onClick={}
-					>
+				<button
+					className="bg-amber-200 hover:bg-amber-300 text-gray-800 font-semibold py-2 p-1 border border-gray-400 rounded-full shadow w-12 mx-auto my-2 disabled:text-gray-400 disabled:hover:bg-white"
+					onClick={() => setCash((cash += getRandomNumber()))}
+				>
 					Roll
 				</button>
 
@@ -74,8 +75,8 @@ export default function Home(props: HomeProps): JSX.Element {
 					<BidButton
 						key={`${n}-${i}`}
 						amount={n}
-						currentCash={currentCash}
-						disabled={currentCash < Number(data.body) + n}
+						currentCash={cash}
+						disabled={cash < Number(data.body) + n}
 						onBid={() => {
 							if (ws) {
 								ws.send(
